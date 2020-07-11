@@ -1,9 +1,6 @@
 from django.http import HttpResponse
 from django.views.generic import View
 
-import time
-import traceback
-
 from .models import *
 
 import json
@@ -35,13 +32,14 @@ class Coordinate(View):
 
 class UserController(View):
     JSON_SUCCESS = {"status": "success"}
-    JSON_FAILED = {"status": "failed"}
+    JSON_FAILED = {"status": "failed",
+                   "message": ""}
 
     @classmethod
     def check_request_method(cls, request):
 
         if request.method == 'GET':
-            response = cls.get(request)
+            response = str(cls.get(request))
             return HttpResponse(response)
         if request.method == 'POST':
             response = str(cls.post(request))
@@ -61,9 +59,9 @@ class UserController(View):
                         'email': users.email,
                         'username': users.username,
                         'description': users.description}
-
-        except Exception as e:
-            print('Ошибка:\n', traceback.format_exc())
+        except Profile.DoesNotExist:
+            cls.JSON_FAILED["message"] = "User does not exist"
+            return cls.JSON_FAILED
         return json.dumps(response)
 
     @classmethod
@@ -72,13 +70,18 @@ class UserController(View):
         try:
             request_json = json.loads(str(request.body.decode('utf-8')))
         except ValueError:
+            cls.JSON_FAILED["message"] = "Error in json from client"
             return cls.JSON_FAILED
 
         user = Profile(email=request_json['email'],
                        username=request_json['user_name'],
                        string_id=request_json['id'],
                        description=request_json['description'])
-        user.save()
+        try:
+            user.save()
+        except Exception:
+            cls.JSON_FAILED["message"] = "User can't be save. This email or nickname exists"
+            return cls.JSON_FAILED
 
         return cls.JSON_SUCCESS
 
@@ -89,10 +92,15 @@ class UserController(View):
         try:
             user = Profile.objects.get(string_id__exact=request_json['id'])
         except Profile.DoesNotExist:
+            cls.JSON_FAILED["message"] = "User does not exist"
             return cls.JSON_FAILED
 
         user.email = request_json['email']
 
-        user.save()
+        try:
+            user.save()
+        except Exception as e:
+            cls.JSON_FAILED["error"] = "User can't be save. This email or nickname exists"
+            return cls.JSON_FAILED
 
         return cls.JSON_SUCCESS
