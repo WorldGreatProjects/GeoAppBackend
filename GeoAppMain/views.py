@@ -31,7 +31,8 @@ class Coordinate(View):
 
 
 class UserController(View):
-    JSON_SUCCESS = {"status": "success"}
+    JSON_SUCCESS = {"status": "success",
+                    "message": ""}
     JSON_FAILED = {"status": "failed",
                    "message": ""}
 
