@@ -55,7 +55,7 @@ class Profile(AbstractBaseUser, PermissionsMixin):
 
     pic = models.ImageField()
 
-    marks = models.ManyToManyField('Mark', related_name='owner_id', blank=True)
+    marks = models.ForeignKey('Mark', related_name='owner_id', blank=True, on_delete=models.CASCADE)
 
     registration_date = models.DateTimeField(auto_now_add=True, blank=True)
 

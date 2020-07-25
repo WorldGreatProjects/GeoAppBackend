@@ -35,9 +35,25 @@ class Coordinate(View):
         return HttpResponse(request)
 
 
-class UserController(ObjectControllerMixin, View):
+class UserController(View):
 
-    def get(self, request, string_id):
+    @staticmethod
+    def check_request_method(request, string_id):
+        if request.method == 'GET':
+            response = str(UserController.get(request, string_id))
+            return HttpResponse(response)
+        if request.method == 'POST':
+            response = str(UserController.post(request, string_id))
+            return HttpResponse(response)
+        if request.method == 'PUT':
+            response = str(UserController.put(request, string_id))
+            return HttpResponse(response)
+        if request.method == 'DELETE':
+            response = str(UserController.delete(request, string_id))
+            return HttpResponse(response)
+
+    @classmethod
+    def get(cls, request, string_id):
         try:
             user = Profile.objects.get(id__exact=string_id)
             response = {'id': user.id,
@@ -54,7 +70,8 @@ class UserController(ObjectControllerMixin, View):
             return JSON_FAILED
         return json.dumps(response)
 
-    def post(self, request, string_id):
+    @classmethod
+    def post(cls, request, string_id):
         try:
             request_json = json.loads(str(request.body.decode('utf-8')))
         except ValueError:
@@ -62,7 +79,7 @@ class UserController(ObjectControllerMixin, View):
             return JSON_FAILED
 
         user = Profile(email=request_json['email'],
-                       username=request_json['user_name'],
+                       username=request_json['username'],
                        id=string_id,
                        password=request_json['password'])
         try:
@@ -73,7 +90,8 @@ class UserController(ObjectControllerMixin, View):
 
         return JSON_SUCCESS
 
-    def put(self, request, string_id):
+    @classmethod
+    def put(cls, request, string_id):
         request_json = json.loads(str(request.body.decode('utf-8')))
         try:
             user = Profile.objects.get(id__exact=string_id)
@@ -81,9 +99,11 @@ class UserController(ObjectControllerMixin, View):
             JSON_FAILED["message"] = "User does not exist"
             return JSON_FAILED
 
-        json_keys = request_json.keys()
-        for key in json_keys:
-            user.key = request_json[key]
+        user.password = request_json["password"]
+        user.username = request_json["username"]
+        user.desc = request_json["desc"]
+        user.email = request_json["email"]
+        user.name = request_json["name"]
 
         try:
             user.save()
@@ -93,7 +113,8 @@ class UserController(ObjectControllerMixin, View):
 
         return JSON_SUCCESS
 
-    def delete(self, request, string_id):
+    @classmethod
+    def delete(cls, request, string_id):
         try:
             user = Profile.objects.get(id__exact=string_id)
         except Profile.DoesNotExist:
@@ -112,18 +133,22 @@ class UserLogin(View):
             request_json = json.loads(str(request.body.decode('utf-8')))
         except ValueError:
             JSON_FAILED["message"] = "Error in json from client"
-            return JSON_FAILED
+            return HttpResponse(str(JSON_FAILED))
 
         try:
-            user_from_email = Profile.objects.get(email__exact=request_json["email"])
-            user_from_password = Profile.objects.get(password__exact=request_json["password"])
+            user_from_username = Profile.objects.get(username__exact=request_json["username"])
         except Profile.DoesNotExist:
             JSON_FAILED["message"] = "User does not exist"
-            return JSON_FAILED
+            return HttpResponse(str(JSON_FAILED))
 
-        if user_from_email.id == user_from_password.id:
-            JSON_SUCCESS["message"] = "Access is allowed"
-            return JSON_SUCCESS
+        if user_from_username.password == request_json["password"]:
+            response = {'id': user_from_username.id,
+                        'email': user_from_username.email,
+                        'username': user_from_username.username,
+                        'desc': user_from_username.desc,
+                        'name': user_from_username.name,
+                        'password':user_from_username.password}
+            return HttpResponse(str(json.dumps(response)))
 
 
 class UserAction(View):
@@ -165,9 +190,25 @@ class UserAction(View):
             return JSON_SUCCESS
 
 
-class MarkController(ObjectControllerMixin, View):
+class MarkController(View):
 
-    def get(self, request, string_id):
+    @staticmethod
+    def check_request_method(request, string_id):
+        if request.method == 'GET':
+            response = str(MarkController.get(request, string_id))
+            return HttpResponse(response)
+        if request.method == 'POST':
+            response = str(MarkController.post(request, string_id))
+            return HttpResponse(response)
+        if request.method == 'PUT':
+            response = str(MarkController.put(request, string_id))
+            return HttpResponse(response)
+        if request.method == 'DELETE':
+            response = str(MarkController.delete(request, string_id))
+            return HttpResponse(response)
+
+    @classmethod
+    def get(cls, request, string_id):
 
         try:
             user = Profile.objects.get(id__exact=string_id)
@@ -196,7 +237,8 @@ class MarkController(ObjectControllerMixin, View):
                 marks.extend(json.dumps(mark_json))
         return marks
 
-    def post(self, request, string_id):
+    @classmethod
+    def post(cls, request, string_id):
 
         try:
             request_json = json.loads(str(request.body.decode('utf-8')))
@@ -218,7 +260,8 @@ class MarkController(ObjectControllerMixin, View):
         return JSON_SUCCESS
 
     # Здесь в json должны приходить lon и lat метки помимо id пользователя
-    def put(self, request, string_id):
+    @classmethod
+    def put(cls, request, string_id):
 
         request_json = json.loads(str(request.body.decode('utf-8')))
         try:
@@ -243,7 +286,8 @@ class MarkController(ObjectControllerMixin, View):
             JSON_FAILED["error"] = "Only owner of the mark can edit it."
             return JSON_FAILED
 
-    def delete(self, request, string_id):
+    @classmethod
+    def delete(cls, request, string_id):
         pass
 
 
