@@ -248,13 +248,20 @@ class MarkController(View):
 
         mark = Mark(lon=request_json['lon'],
                     lat=request_json['lat'],
-                    desc=request_json['desc'],
-                    owner_id=string_id)
+                    desc=request_json['desc'])
+
+        try:
+            user = Profile.objects.get(id__exact=string_id)
+        except Profile.DoesNotExist:
+            JSON_FAILED["message"] = "User does not exist"
+            return JSON_FAILED
+
+        user.marks.add(mark)
 
         try:
             mark.save()
         except Exception:
-            JSON_FAILED["message"] = "Mark can't be save. This email or nickname exists"
+            JSON_FAILED["message"] = "Mark can't be save."
             return JSON_FAILED
 
         return JSON_SUCCESS

@@ -55,8 +55,6 @@ class Profile(AbstractBaseUser, PermissionsMixin):
 
     pic = models.ImageField()
 
-    marks = models.ForeignKey('Mark', related_name='owner_id', blank=True, on_delete=models.CASCADE, null=True)
-
     registration_date = models.DateTimeField(auto_now_add=True, blank=True)
 
     USERNAME_FIELD = 'username'
@@ -71,6 +69,7 @@ class Mark(models.Model):
     lat = models.FloatField()
     date = models.DateTimeField(auto_now_add=True)
     desc = models.CharField(max_length=100, blank=True)
+    owner_id = models.ForeignKey(Profile,related_name='marks', blank=True, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.id
+        return self.owner_id
