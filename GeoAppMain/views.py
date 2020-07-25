@@ -232,7 +232,7 @@ class MarkController(View):
                 mark_json = {'lon': mark.lon,
                              'lat': mark.lat,
                              'desc': mark.desc,
-                             'owner_id': mark.owner_id,
+                             'owner': mark.owner.id,
                              'date': mark.date}
                 marks.extend(json.dumps(mark_json))
         return marks
@@ -259,6 +259,7 @@ class MarkController(View):
         user.marks.add(mark)
 
         try:
+            user.save()
             mark.save()
         except Exception:
             JSON_FAILED["message"] = "Mark can't be save."
@@ -272,6 +273,7 @@ class MarkController(View):
 
         request_json = json.loads(str(request.body.decode('utf-8')))
         try:
+            # Здесь неправильный поиск (owner_id не существует)
             mark = Mark.objects.get(owner_id__exact=string_id)
         except Mark.DoesNotExist:
             JSON_FAILED["message"] = "Marks does not exist"
@@ -281,7 +283,7 @@ class MarkController(View):
         for key in json_keys:
             mark.key = request_json[key]
 
-        if string_id == mark.owner_id:
+        if string_id == mark.owner.id:
             try:
                 mark.save()
                 JSON_SUCCESS["message"] = "Edition success"
