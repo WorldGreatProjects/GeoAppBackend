@@ -32,27 +32,30 @@ class CustomProfileManager(BaseUserManager):
 class Profile(AbstractBaseUser, PermissionsMixin):
     objects = CustomProfileManager()
 
-    string_id = models.CharField(max_length=100, unique=True, primary_key=True)
+    id = models.CharField(max_length=100, unique=True, primary_key=True)
 
     email = models.EmailField(unique=True, default=None)
     password = models.CharField(max_length=100)
 
     username = models.CharField(max_length=100, unique=True)
-    realname = models.CharField(max_length=30, blank=True)
+    # user's real name
+    name = models.CharField(max_length=30, blank=True)
 
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
-    description = models.TextField(max_length=200)
+    # description
+    desc = models.TextField(max_length=200)
 
-    subscriptions = models.ForeignKey('self', related_name='users_subscr', on_delete=models.CASCADE, null=True,
-                                      blank=True)
-    followers = models.ForeignKey('self', related_name='users_followers', on_delete=models.CASCADE, null=True,
-                                  blank=True)
+    # subscription
+    subs = models.ForeignKey('self', related_name='users_followers', on_delete=models.CASCADE, null=True,
+                             blank=True)
+    # followers = models.ForeignKey('self', related_name='users_subs', on_delete=models.CASCADE, null=True,
+    #                              blank=True)
 
-    profile_img = models.ImageField()
+    pic = models.ImageField()
 
-    marks = models.ManyToManyField('Mark', related_name='users', blank=True)
+    marks = models.ManyToManyField('Mark', related_name='owner_id', blank=True)
 
     registration_date = models.DateTimeField(auto_now_add=True, blank=True)
 
@@ -64,10 +67,10 @@ class Profile(AbstractBaseUser, PermissionsMixin):
 
 
 class Mark(models.Model):
-
     lon = models.FloatField()
     lat = models.FloatField()
-    date_add = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
+    desc = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
-        return self.users
+        return self.id
